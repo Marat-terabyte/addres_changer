@@ -1,0 +1,65 @@
+#!/usr/bin/env python3
+
+import subprocess
+import re
+
+change = str(input('[+] what change(mac , ip):'))
+
+
+def input_command():
+	global interface
+	interface = str(input('[+] input interface(eth , wlan0):'))
+
+	global addres
+	addres = str(input('[+] input some mac-addres example (mac:00:11:22:33:44:55) , (ip:192.168.0.1):'))
+
+
+if change == 'mac':
+	input_command()
+
+	ifconfig = subprocess.check_output(['ifconfig' , interface]).decode()
+
+	old_ip_result = re.search("inet \d.\d.\d.\d.\d.\d." , ifconfig)
+
+
+	subprocess.call('sudo ifconfig {0} down'.format(interface) , shell = True)
+
+	subprocess.call('sudo ifconfig {0} hw ether {1}'.format(interface , addres) , shell = True)	
+
+	subprocess.call('sudo ifconfig {0} up'.format(interface) , shell = True)
+
+
+	ipconfig = subprocess.check_output(['ifconfig' , interface]).decode()
+
+	new_ip_result = re.search("inet \d.\d.\d.\d.\d.\d." , ipconfig)
+
+
+	if old_ip_result != new_ip_result:
+		print('[*] Changed!')
+
+
+	elif old_ip_result == new_ip_result:
+		print("[!] Don't changed! ")
+
+
+elif change == 'ip':
+	input_command()
+
+	old_ifconfig = subprocess.check_output(["ifconfig" , interface]).decode()
+
+	old_mac_result = re.search(r"\w\w:\w\w:\w\w:\w\w:\w\w:\w\w" , old_ifconfig)
+
+
+	subprocess.call('sudo ifconfig {0}  inet {1}'.format(interface , addres) , shell = True)
+
+	new_ifconfig = subprocess.check_output(["ifconfig" , interface]).decode()
+
+	new_mac_result = re.search(r"\w\w:\w\w:\w\w:\w\w:\w\w:\w\w" , new_ifconfig)
+
+
+	if old_mac_result != new_mac_result:
+		print('[*] Changed!')
+
+
+	elif old_mac_result == new_mac_result:
+		print("[!] Don't changed!")
